@@ -8,7 +8,7 @@ import sublime_plugin
 def trace_method(method):
     ''' Decorator for tracing method entry. '''
     def inner(ref, *args):
-        print(f'MET {ref.__class__.__name__}.{method.__name__} {args}')
+        print(f'MTH', f'{ref.__class__.__name__}.{method.__name__} {args}')
         return method(ref, *args)
     return inner
 
