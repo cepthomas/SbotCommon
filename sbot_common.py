@@ -5,22 +5,28 @@ import sublime
 import sublime_plugin
 
 
+# Note: print() will go to the SbotLogger if it is installed.
+
+
+#-----------------------------------------------------------------------------------
 def trace_method(method):
     ''' Decorator for tracing method entry. '''
     def inner(ref, *args):
-        print(f'MTH', f'{ref.__class__.__name__}.{method.__name__} {args}')
+        print(f'MTH {ref.__module__}.{ref.__class__.__name__}.{method.__name__} {args}')
         return method(ref, *args)
     return inner
 
 
+#-----------------------------------------------------------------------------------
 def trace_function(func):
-    ''' Decorator for tracing function entry. '''
+    ''' Decorator for tracing function entry. dir(func). '''
     def inner(*args):
-        print(f'FUN {func.__name__} {args}')
+        print(f'FUN {func.__module__}.{func.__name__} {args}')
         return func(*args)
     return inner
 
 
+#-----------------------------------------------------------------------------------
 def get_store_fn(project_fn, file_ext):
     ''' General utility to get store file name. '''
     store_path = os.path.join(sublime.packages_path(), 'User', 'SbotStore')
@@ -30,6 +36,7 @@ def get_store_fn(project_fn, file_ext):
     return store_fn
 
 
+#-----------------------------------------------------------------------------------
 def get_sel_regions(view, settings):
     ''' Function to get selections or optionally the whole view if sel_all is True.'''
     regions = []
@@ -41,6 +48,7 @@ def get_sel_regions(view, settings):
     return regions
 
 
+#-----------------------------------------------------------------------------------
 def create_new_view(window, text):
     ''' Creates a temp view with text. Returns the view.'''
     vnew = window.new_file()
@@ -57,3 +65,26 @@ class SbotGeneralEvent(sublime_plugin.EventListener):
         ''' Show the abs position in the status bar. '''
         pos = view.sel()[0].begin()
         view.set_status("position", f'Pos {pos}')
+
+
+#-----------------------------------------------------------------------------------
+class SbotSplitViewCommand(sublime_plugin.WindowCommand):
+    ''' Toggles between split file views. TODO probably needs a better home than this. '''
+
+    def run(self):
+        window = self.window
+
+        if len(window.layout()['rows']) > 2:
+            # Remove split.
+            window.run_command("focus_group", {"group": 1})
+            window.run_command("close_file")
+            window.run_command("set_layout", {"cols": [0.0, 1.0], "rows": [0.0, 1.0], "cells": [[0, 0, 1, 1]]})
+        else:
+            # Add split.
+            sel_row, _ = window.active_view().rowcol(window.active_view().sel()[0].a)  # current sel
+            window.run_command("set_layout", {"cols": [0.0, 1.0], "rows": [0.0, 0.5, 1.0], "cells": [[0, 0, 1, 1], [0, 1, 1, 2]]})
+            window.run_command("focus_group", {"group": 0})
+            window.run_command("clone_file")
+            window.run_command("move_to_group", {"group": 1})
+            window.active_view().run_command("goto_line", {"line": sel_row})
+
