@@ -27,9 +27,14 @@ def trace_function(func):
 
 
 #-----------------------------------------------------------------------------------
-def get_store_fn(project_fn, file_ext):
+def get_store_fn(explicit_file_path, project_fn, file_ext):
     ''' General utility to get store file name. '''
-    store_path = os.path.join(sublime.packages_path(), 'User', 'SbotStore')
+    store_path = None
+    if explicit_file_path is None or len(explicit_file_path) == 0:
+        store_path = os.path.join(sublime.packages_path(), 'User', 'SbotStore')
+    else:
+        store_path = explicit_file_path
+        
     pathlib.Path(store_path).mkdir(parents=True, exist_ok=True)
     project_fn = os.path.basename(project_fn).replace('.sublime-project', file_ext)
     store_fn = os.path.join(store_path, project_fn)
