@@ -62,6 +62,7 @@ def create_new_view(window, text):
     return vnew
 
 
+# TODO probably need a better home for these:
 #-----------------------------------------------------------------------------------
 class SbotGeneralEvent(sublime_plugin.EventListener):
     ''' Listener for window events of interest. '''
@@ -74,7 +75,7 @@ class SbotGeneralEvent(sublime_plugin.EventListener):
 
 #-----------------------------------------------------------------------------------
 class SbotSplitViewCommand(sublime_plugin.WindowCommand):
-    ''' Toggles between split file views. TODO probably needs a better home than this. '''
+    ''' Toggles between split file views. '''
 
     def run(self):
         window = self.window
