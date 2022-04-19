@@ -1,3 +1,4 @@
+import sys
 import os
 import subprocess
 import pathlib
@@ -5,28 +6,26 @@ import sublime
 import sublime_plugin
 
 
-# Note: print() will go to the SbotLogger if it is installed.
-
-
 #-----------------------------------------------------------------------------------
-def trace_method(method):
-    ''' Decorator for tracing method entry. '''
-    def inner(ref, *args):
-        print(f'MTH {ref.__module__}.{ref.__class__.__name__}.{method.__name__} {args}')
-        return method(ref, *args)
-    return inner
+def log_message(cat, message=''):
+    ''' Format a standard message and print it.
+    It will go to sbot_logger if installed - but cat must be four chars or less. '''
+    
+    # Get caller info.
+    # This is the fastest way per https://gist.github.com/JettJones/c236494013f22723c1822126df944b12
+    frame = sys._getframe(1)
+    fn = os.path.basename(frame.f_code.co_filename)
+    func = frame.f_code.co_name
+    line = frame.f_lineno
+
+    # Fix cat.
+    cat = (cat + '____')[:4]
+
+    smsg = f'{cat} {func}() {fn}:{line} {message}'
+    print(smsg)
 
 
-#-----------------------------------------------------------------------------------
-def trace_function(func):
-    ''' Decorator for tracing function entry. dir(func). '''
-    def inner(*args):
-        print(f'FUN {func.__module__}.{func.__name__} {args}')
-        return func(*args)
-    return inner
-
-
-#-----------------------------------------------------------------------------------
+# #-----------------------------------------------------------------------------------
 def get_store_fn(explicit_file_path, project_fn, file_ext):
     ''' General utility to get store file name. '''
     store_path = None
