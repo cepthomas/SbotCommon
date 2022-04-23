@@ -1,27 +1,35 @@
 import sys
 import os
-import subprocess
 import pathlib
 import sublime
 import sublime_plugin
 
 
 #-----------------------------------------------------------------------------------
-def log_message(cat, message=''):
-    ''' Format a standard message and print it.
-    It will go to sbot_logger if installed - but cat must be four chars or less. '''
+def slog(cat, message=''):
+    ''' Format a standard message with caller info and print it.
+    It will go to sbot_logger if installed.
+    Note cat must be 4 chars or less.
+    '''
     
+    # Check cat.
+    cat = (cat + '____')[:4]
+
     # Get caller info.
-    # This is the fastest way per https://gist.github.com/JettJones/c236494013f22723c1822126df944b12
     frame = sys._getframe(1)
     fn = os.path.basename(frame.f_code.co_filename)
     func = frame.f_code.co_name
     line = frame.f_lineno
+    # mod_name = frame.f_globals["__name__"]
 
-    # Fix cat.
-    cat = (cat + '____')[:4]
+    full_func = ''
+    try:
+        class_name = frame.f_locals['self'].__class__.__name__
+        full_func = f'{class_name}.{func}'
+    except KeyError:
+        full_func = func
 
-    smsg = f'{cat} {func}() {fn}:{line} {message}'
+    smsg = f'{cat} {full_func}() {fn}:{line} {message}'
     print(smsg)
 
 
@@ -61,13 +69,15 @@ def create_new_view(window, text):
     return vnew
 
 
-# TODO probably need a better home for these:
+### TODO maybe a better home for these two?
+
 #-----------------------------------------------------------------------------------
 class SbotGeneralEvent(sublime_plugin.EventListener):
     ''' Listener for window events of interest. '''
 
     def on_selection_modified(self, view):
         ''' Show the abs position in the status bar. '''
+        # slog('DEV', f'{view}')
         pos = view.sel()[0].begin()
         view.set_status("position", f'Pos {pos}')
 
@@ -92,4 +102,3 @@ class SbotSplitViewCommand(sublime_plugin.WindowCommand):
             window.run_command("clone_file")
             window.run_command("move_to_group", {"group": 1})
             window.active_view().run_command("goto_line", {"line": sel_row})
-
