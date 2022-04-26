@@ -8,8 +8,8 @@ import sublime_plugin
 #-----------------------------------------------------------------------------------
 def slog(cat, message=''):
     ''' Format a standard message with caller info and print it.
-    It will go to sbot_logger if installed.
-    Note cat must be 4 chars or less.
+    If installed, it will route to sbot_logger via print().
+    Note that cat should be four chars or less.
     '''
     
     # Check cat.
@@ -29,13 +29,13 @@ def slog(cat, message=''):
     except KeyError:
         full_func = func
 
-    smsg = f'{cat} {full_func}() {fn}:{line} {message}'
-    print(smsg)
+    # Print to console or sbot_logger if installed.
+    print(f'{cat} {full_func}() {fn}:{line} {message}')
 
 
-# #-----------------------------------------------------------------------------------
-def get_store_fn(explicit_file_path, project_fn, file_ext):
-    ''' General utility to get store file name. '''
+#-----------------------------------------------------------------------------------
+def get_store_fn(explicit_file_path, fn):
+    ''' General utility to get store simple file name. '''
     store_path = None
     if explicit_file_path is None or len(explicit_file_path) == 0:
         store_path = os.path.join(sublime.packages_path(), 'User', 'SbotStore')
@@ -43,9 +43,15 @@ def get_store_fn(explicit_file_path, project_fn, file_ext):
         store_path = explicit_file_path
         
     pathlib.Path(store_path).mkdir(parents=True, exist_ok=True)
-    project_fn = os.path.basename(project_fn).replace('.sublime-project', file_ext)
-    store_fn = os.path.join(store_path, project_fn)
+    store_fn = os.path.join(store_path, fn)
     return store_fn
+
+
+#-----------------------------------------------------------------------------------
+def get_store_fn_for_project(explicit_file_path, project_fn, file_ext):
+    ''' General utility to get store file name based on ST project name. '''
+    project_fn = os.path.basename(project_fn).replace('.sublime-project', file_ext)
+    store_fn = get_store_fn(explicit_file_path, project_fn)
 
 
 #-----------------------------------------------------------------------------------
@@ -67,38 +73,3 @@ def create_new_view(window, text):
     vnew.set_scratch(True)
     vnew.run_command('append', {'characters': text})  # insert has some odd behavior - indentation
     return vnew
-
-
-### TODO maybe a better home for these two?
-
-#-----------------------------------------------------------------------------------
-class SbotGeneralEvent(sublime_plugin.EventListener):
-    ''' Listener for window events of interest. '''
-
-    def on_selection_modified(self, view):
-        ''' Show the abs position in the status bar. '''
-        # slog('DEV', f'{view}')
-        pos = view.sel()[0].begin()
-        view.set_status("position", f'Pos {pos}')
-
-
-#-----------------------------------------------------------------------------------
-class SbotSplitViewCommand(sublime_plugin.WindowCommand):
-    ''' Toggles between split file views. '''
-
-    def run(self):
-        window = self.window
-
-        if len(window.layout()['rows']) > 2:
-            # Remove split.
-            window.run_command("focus_group", {"group": 1})
-            window.run_command("close_file")
-            window.run_command("set_layout", {"cols": [0.0, 1.0], "rows": [0.0, 1.0], "cells": [[0, 0, 1, 1]]})
-        else:
-            # Add split.
-            sel_row, _ = window.active_view().rowcol(window.active_view().sel()[0].a)  # current sel
-            window.run_command("set_layout", {"cols": [0.0, 1.0], "rows": [0.0, 0.5, 1.0], "cells": [[0, 0, 1, 1], [0, 1, 1, 2]]})
-            window.run_command("focus_group", {"group": 0})
-            window.run_command("clone_file")
-            window.run_command("move_to_group", {"group": 1})
-            window.active_view().run_command("goto_line", {"line": sel_row})
