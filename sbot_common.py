@@ -38,7 +38,7 @@ def get_store_fn(explicit_file_path, fn):
     ''' General utility to get store simple file name. '''
     store_path = None
     if explicit_file_path is None or len(explicit_file_path) == 0:
-        store_path = os.path.join(sublime.packages_path(), 'User', 'SbotStore')
+        store_path = os.path.join(sublime.packages_path(), 'User', '.SbotStore')
     else:
         store_path = explicit_file_path
         
@@ -50,8 +50,10 @@ def get_store_fn(explicit_file_path, fn):
 #-----------------------------------------------------------------------------------
 def get_store_fn_for_project(explicit_file_path, project_fn, file_ext):
     ''' General utility to get store file name based on ST project name. '''
-    project_fn = os.path.basename(project_fn).replace('.sublime-project', file_ext)
-    store_fn = get_store_fn(explicit_file_path, project_fn)
+    fn = os.path.basename(project_fn).replace('.sublime-project', file_ext)
+    store_fn = get_store_fn(explicit_file_path, fn)
+    # slog('XXXX', f'|{project_fn}|{file_ext}|{fn}|{store_fn}')
+    return store_fn
 
 
 #-----------------------------------------------------------------------------------
